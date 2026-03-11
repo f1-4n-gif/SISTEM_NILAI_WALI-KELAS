@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEM NILAI WALI KELAS - SMPN 6 Manokwari</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .bg-custom-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: url('https://i.ibb.co.com/k6GFHZ0q/IMG-20240913-WA0003.jpg') no-repeat center center fixed;
+            background-size: cover; filter: blur(4px); transform: scale(1.1);
+        }
+        
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: rgba(15, 23, 42, 0.75);
+        }
+
+        @media print { 
+            @page { size: A4; margin: 1cm 1.5cm; }
+            .no-print { display: none !important; } 
+            .bg-custom-container, .bg-overlay { display: none !important; }
+            body { background: white !important; padding: 0 !important; color: black !important; }
+            .print-only { display: block !important; }
+            
+            table { 
+                border-collapse: collapse !important; 
+                width: 100% !important; 
+                border: 1px solid black !important;
+            }
+            th, td { 
+                border: 1px solid black !important; 
+                padding: 8px 6px !important; 
+                color: black !important; 
+                font-size: 10pt !important;
+            }
+            th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            
+            .page-break { page-break-before: always; }
+            .print-signature { margin-top: 30px; }
+        }
+
+        .print-only { display: none; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .modal-overlay {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+
+        .animate-scale-in { animation: scaleIn 0.2s ease-out forwards; }
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900">
+    <div class="bg-custom-container no-print"></div>
+    <div class="bg-overlay no-print"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const LOGO_URL = "https://i.ibb.co.com/JWy6dhzM/LOGO-SMP6-1-removebg-preview.png";
+
+        const INITIAL_STUDENTS = [
+            { id: 1, name: 'ALFIAN DASSI', nisn: '0133709997', tugas: 0, uh: 0, uas: 0 },
+            { id: 2, name: 'BETO FRANSISCUS XAFERIUS MARINI', nisn: '3133488468', tugas: 0, uh: 0, uas: 0 },
+            { id: 3, name: 'DIONEL CRISNA', nisn: '3129985332', tugas: 0, uh: 0, uas: 0 },
+            { id: 4, name: 'DWYNE MARCHIO CAESARIO HUNILA', nisn: '3132813039', tugas: 0, uh: 0, uas: 0 },
+            { id: 5, name: 'HABEL RONSUMBRE', nisn: '3129792681', tugas: 0, uh: 0, uas: 0 },
+            { id: 6, name: 'IMANUEL ADVENTUS RODRIGO BONEPAY', nisn: '0126453609', tugas: 0, uh: 0, uas: 0 },
+            { id: 7, name: 'INTAN VANEZYA FEBRIYANTI MANDOSIR', nisn: '3138523586', tugas: 0, uh: 0, uas: 0 },
+            { id: 8, name: 'ISABELLA EKA SANJAYA', nisn: '0134870480', tugas: 0, uh: 0, uas: 0 },
+            { id: 9, name: 'JANET KARUNIA NEVALIA ULLO', nisn: '0131508041', tugas: 0, uh: 0, uas: 0 },
+            { id: 10, name: 'KHENSYA ERWANO', nisn: '3127332357', tugas: 0, uh: 0, uas: 0 },
+            { id: 11, name: 'KIJNE KALEB WANMA', nisn: '3139654691', tugas: 0, uh: 0, uas: 0 },
+            { id: 12, name: 'LAMBERTH WAROPEN', nisn: '0118708112', tugas: 0, uh: 0, uas: 0 },
+            { id: 13, name: 'MARIA ALEKSIA MOTA', nisn: '3134038705', tugas: 0, uh: 0, uas: 0 },
+            { id: 14, name: 'MARIA ALFONSA KUKJAKON KINOMBE', nisn: '0115990757', tugas: 0, uh: 0, uas: 0 },
+            { id: 15, name: 'MARLINA INSEN', nisn: '3117879867', tugas: 0, uh: 0, uas: 0 },
+            { id: 16, name: 'MARSEL ANUGRA SAPAN KADANG', nisn: '3134834957', tugas: 0, uh: 0, uas: 0 },
+            { id: 17, name: 'MEKZEN FRITS SIMON RONSUMBRE', nisn: '3121573630', tugas: 0, uh: 0, uas: 0 },
+            { id: 18, name: 'MICHAEL LODIWIK DULE', nisn: '3138019217', tugas: 0, uh: 0, uas: 0 },
+            { id: 19, name: 'MUHAMMAD AL HAADIIH FIQI FIRDAUS', nisn: '3124621027', tugas: 0, uh: 0, uas: 0 },
+            { id: 20, name: 'NUR SIFA JUMADI', nisn: '3122034678', tugas: 0, uh: 0, uas: 0 },
+            { id: 21, name: 'NURUL HIDAYAH', nisn: '0132930192', tugas: 0, uh: 0, uas: 0 },
+            { id: 22, name: 'PUTRI IRAWATI JULISTIAWATI MAABUAT', nisn: '3133222926', tugas: 0, uh: 0, uas: 0 },
+            { id: 23, name: 'RATU CICILIA NUBATONIS', nisn: '0134230770', tugas: 0, uh: 0, uas: 0 },
+            { id: 24, name: 'SIONI YULIANA SAMPOEL', nisn: '3126439728', tugas: 0, uh: 0, uas: 0 },
+            { id: 25, name: 'STEFANI VIOLITA AYUDIA PUTRI', nisn: '0123018581', tugas: 0, uh: 0, uas: 0 },
+            { id: 26, name: 'WIHELMUS WANAR KAMEUBUN', nisn: '0132639711', tugas: 0, uh: 0, uas: 0 },
+            { id: 27, name: 'YOHANES YAKOBUS DIMARA', nisn: '0125286445', tugas: 0, uh: 0, uas: 0 },
+            { id: 28, name: 'ZEVANYA NATASHA KARTINI BINWASEF', nisn: '3125666678', tugas: 0, uh: 0, uas: 0 },
+            { id: 29, name: 'REYHA RAFAEL TUMBLAKA', nisn: '-', tugas: 0, uh: 0, uas: 0 }
+        ];
+
+        function App() {
+            const [userRole, setUserRole] = useState(null); 
+            const [passwordInput, setPasswordInput] = useState('');
+            const [loginError, setLoginError] = useState('');
+            const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+            const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+            const [newStudent, setNewStudent] = useState({ name: '', nisn: '' });
+            const [students, setStudents] = useState(() => {
+                const saved = localStorage.getItem('smp6_grades_v2');
+                return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+            });
+
+            useEffect(() => {
+                localStorage.setItem('smp6_grades_v2', JSON.stringify(students));
+            }, [students]);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passwordInput === '60400173sekolah') {
+                    setUserRole('admin');
+                    setLoginError('');
+                    setPasswordInput('');
+                } else {
+                    setLoginError('Password Wali Kelas Salah!');
+                }
+            };
+
+            const updateGrade = (id, field, value) => {
+                if (userRole !== 'admin') return;
+                const val = value === '' ? 0 : Math.min(100, Math.max(0, parseInt(value) || 0));
+                setStudents(prev => prev.map(s => s.id === id ? { ...s, [field]: val } : s));
+            };
+
+            const handleAddStudent = (e) => {
+                e.preventDefault();
+                if (!newStudent.name.trim()) return;
+                const nextId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
+                setStudents(prev => [...prev, {
+                    id: nextId,
+                    name: newStudent.name.toUpperCase(),
+                    nisn: newStudent.nisn || '-',
+                    tugas: 0, uh: 0, uas: 0
+                }]);
+                setNewStudent({ name: '', nisn: '' });
+                setIsAddModalOpen(false);
+            };
+
+            const deleteStudent = () => {
+                if (confirmDeleteId) {
+                    setStudents(prev => prev.filter(s => s.id !== confirmDeleteId));
+                    setConfirmDeleteId(null);
+                }
+            };
+
+            const handlePrint = () => {
+                window.print();
+            };
+
+            const handleLogout = () => {
+                setUserRole(null);
+                setPasswordInput('');
+                setLoginError('');
+            };
+
+            const KopSurat = () => (
+                <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
+                    <div className="flex justify-center items-center gap-8">
+                        <img src={LOGO_URL} className="w-28 h-28" />
+                        <div>
+                            <h2 className="text-sm font-bold uppercase">Pemerintah Kabupaten Manokwari</h2>
+                            <h1 className="text-2xl font-black uppercase leading-tight">SMP Negeri 6 Manokwari</h1>
+                            <p className="text-[8pt] italic">Jalan Pertanian Wosi, Manokwari Barat, Kabupaten Manokwari, Papua Barat</p>
+                            <p className="text-[8pt]">E-mail: smpn6mkw@gmail.com | Kode Pos: 98312</p>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            if (!userRole) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="max-w-md w-full relative z-10 bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-10 shadow-2xl border border-white/20">
+                            <div className="text-center mb-8">
+                                <img src={LOGO_URL} className="w-28 h-28 mx-auto mb-6 drop-shadow-lg" />
+                                <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight uppercase">SISTEM NILAI<br/>WALI KELAS</h1>
+                                <p className="text-slate-500 font-medium text-xs mt-2">SMP Negeri 6 Manokwari</p>
+                            </div>
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <input 
+                                    type="password" 
+                                    placeholder="Password Wali Kelas..." 
+                                    className="w-full px-5 py-4 rounded-2xl bg-slate-100 border-2 border-transparent focus:border-indigo-500 focus:bg-white transition-all outline-none text-center font-semibold"
+                                    value={passwordInput} 
+                                    onChange={(e) => setPasswordInput(e.target.value)} 
+                                />
+                                {loginError && <p className="text-red-500 text-[10px] text-center font-black mt-2 uppercase">{loginError}</p>}
+                                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98]">LOGIN ADMIN</button>
+                                <button type="button" onClick={() => setUserRole('parent')} className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98]">LIHAT NILAI</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            const page1 = students.slice(0, 15);
+            const page2 = students.slice(15);
+
+            const TableContent = ({ data, startIndex, isDashboard = false }) => (
+                <table className="w-full border-collapse">
+                    <thead>
+                        <tr className="bg-slate-50 border-b border-slate-100">
+                            <th className="w-10 text-center py-4 text-[10px] font-black uppercase text-slate-400">No</th>
+                            <th className="text-left px-4 py-4 text-[10px] font-black uppercase text-slate-400">
+                                {isDashboard ? "DAFTAR SISWA" : "Nama Siswa"}
+                            </th>
+                            <th className="w-20 text-center py-4 text-[10px] font-black uppercase text-slate-400">Tugas</th>
+                            <th className="w-20 text-center py-4 text-[10px] font-black uppercase text-slate-400">UH</th>
+                            <th className="w-20 text-center py-4 text-[10px] font-black uppercase text-slate-400">UAS</th>
+                            <th className="w-24 text-center py-4 text-[10px] font-black uppercase text-indigo-400 bg-indigo-50/30">Rata-Rata</th>
+                            {userRole === 'admin' && <th className="w-14 text-center py-4 text-[10px] font-black uppercase text-slate-400 no-print">Opsi</th>}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {data.map((s, idx) => {
+                            const avg = ((s.tugas + s.uh + s.uas) / 3).toFixed(1);
+                            return (
+                                <tr key={s.id} className="hover:bg-slate-50">
+                                    <td className="text-center py-3 text-xs font-bold text-slate-300">{startIndex + idx + 1}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="font-bold text-slate-800 text-xs uppercase leading-tight">{s.name}</div>
+                                        <div className="text-[9px] font-bold text-slate-400 no-print uppercase">NISN: {s.nisn}</div>
+                                    </td>
+                                    <td className="text-center">
+                                        {userRole === 'admin' ? (
+                                            <input 
+                                                type="number" 
+                                                className="w-12 text-center font-bold no-print bg-slate-50 rounded py-1 focus:ring-2 ring-indigo-200 outline-none" 
+                                                value={s.tugas} 
+                                                onChange={(e) => updateGrade(s.id, 'tugas', e.target.value)} 
+                                            />
+                                        ) : (
+                                            <span className="font-bold text-slate-600 no-print">{s.tugas}</span>
+                                        )}
+                                        <span className="print-only font-bold">{s.tugas}</span>
+                                    </td>
+                                    <td className="text-center">
+                                        {userRole === 'admin' ? (
+                                            <input 
+                                                type="number" 
+                                                className="w-12 text-center font-bold no-print bg-slate-50 rounded py-1 focus:ring-2 ring-indigo-200 outline-none" 
+                                                value={s.uh} 
+                                                onChange={(e) => updateGrade(s.id, 'uh', e.target.value)} 
+                                            />
+                                        ) : (
+                                            <span className="font-bold text-slate-600 no-print">{s.uh}</span>
+                                        )}
+                                        <span className="print-only font-bold">{s.uh}</span>
+                                    </td>
+                                    <td className="text-center">
+                                        {userRole === 'admin' ? (
+                                            <input 
+                                                type="number" 
+                                                className="w-12 text-center font-bold no-print bg-slate-50 rounded py-1 focus:ring-2 ring-indigo-200 outline-none" 
+                                                value={s.uas} 
+                                                onChange={(e) => updateGrade(s.id, 'uas', e.target.value)} 
+                                            />
+                                        ) : (
+                                            <span className="font-bold text-slate-600 no-print">{s.uas}</span>
+                                        )}
+                                        <span className="print-only font-bold">{s.uas}</span>
+                                    </td>
+                                    <td className="text-center bg-indigo-50/10">
+                                        <span className={`font-black text-xs ${parseFloat(avg) >= 75 ? 'text-indigo-600' : 'text-slate-500'}`}>{avg}</span>
+                                    </td>
+                                    {userRole === 'admin' && (
+                                        <td className="text-center no-print">
+                                            <button onClick={() => setConfirmDeleteId(s.id)} className="text-rose-400 hover:text-rose-600 p-1 transition-colors">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                            </button>
+                                        </td>
+                                    )}
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            );
+
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <div className="max-w-5xl mx-auto">
+                        
+                        {/* HEADER DASHBOARD */}
+                        <header className="no-print flex flex-wrap gap-4 justify-between items-center mb-8 bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-xl">
+                            <div className="flex items-center gap-4">
+                                <img src={LOGO_URL} className="w-14 h-14 drop-shadow-sm" />
+                                <div>
+                                    <h1 className="text-lg font-black text-slate-800 uppercase leading-none">SISTEM NILAI WALI KELAS</h1>
+                                    <p className="text-[10px] font-bold text-emerald-600 mt-1 uppercase">SMP Negeri 6 Manokwari</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                {userRole === 'admin' && (
+                                    <button onClick={() => setIsAddModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase flex items-center gap-2 transition-all shadow-lg shadow-emerald-200">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        Tambah Siswa
+                                    </button>
+                                )}
+                                <button onClick={handlePrint} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase flex items-center gap-2 transition-all shadow-lg shadow-indigo-200">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                    CETAK PDF
+                                </button>
+                                <button onClick={handleLogout} className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-2 rounded-xl transition-all">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* TAMPILAN DASHBOARD */}
+                        <div className="no-print bg-white rounded-[2rem] shadow-2xl overflow-hidden mb-8">
+                            <TableContent data={students} startIndex={0} isDashboard={true} />
+                            {students.length === 0 && (
+                                <div className="p-20 text-center flex flex-col items-center gap-4">
+                                    <div className="w-16 h-16 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                    </div>
+                                    <p className="text-slate-400 font-bold uppercase text-xs italic">Belum ada data siswa.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* TAMPILAN CETAK - HALAMAN 1 */}
+                        <div className="print-only">
+                            <KopSurat />
+                            {/* Judul diubah sesuai instruksi */}
+                            <h3 className="text-center font-bold text-sm uppercase mb-4 underline">DAFTAR NILAI SISWA - HALAMAN 1</h3>
+                            <div className="border border-black">
+                                <TableContent data={page1} startIndex={0} />
+                            </div>
+                        </div>
+
+                        {/* TAMPILAN CETAK - HALAMAN 2 */}
+                        {students.length > 15 && (
+                            <div className="print-only page-break">
+                                <KopSurat />
+                                {/* Judul diubah sesuai instruksi */}
+                                <h3 className="text-center font-bold text-sm uppercase mb-4 underline">DAFTAR NILAI SISWA - HALAMAN 2</h3>
+                                <div className="border border-black">
+                                    <TableContent data={page2} startIndex={15} />
+                                </div>
+                                
+                                <div className="flex justify-end mt-12 mr-10 print-signature">
+                                    <div className="text-center">
+                                        <p className="text-xs mb-1">Manokwari, {new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date())}</p>
+                                        <p className="font-bold text-xs mb-20 uppercase">Wali Kelas,</p>
+                                        <p className="font-bold text-sm">_________________________</p>
+                                        <p className="text-xs text-left">NIP.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {students.length <= 15 && (
+                            <div className="print-only mt-12 flex justify-end mr-10">
+                                <div className="text-center">
+                                    <p className="text-xs mb-1">Manokwari, {new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date())}</p>
+                                    <p className="font-bold text-xs mb-20 uppercase">Wali Kelas,</p>
+                                    <p className="font-bold text-sm">_________________________</p>
+                                    <p className="text-xs text-left">NIP.</p>
+                                </div>
+                            </div>
+                        )}
+
+                        <footer className="no-print text-center text-white/40 text-[10px] font-bold uppercase tracking-widest py-10">
+                            SMP Negeri 6 Manokwari &bull; v3.0 &bull; 2024/2025
+                        </footer>
+                    </div>
+
+                    {/* MODAL TAMBAH SISWA */}
+                    {isAddModalOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay no-print">
+                            <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full animate-scale-in shadow-2xl">
+                                <h3 className="text-lg font-black text-slate-800 uppercase mb-6">Tambah Siswa</h3>
+                                <form onSubmit={handleAddStudent} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Nama Lengkap</label>
+                                        <input type="text" required placeholder="CONTOH: BUDI SANTOSO" className="w-full px-5 py-3 rounded-xl bg-slate-100 font-bold uppercase text-sm outline-none focus:ring-2 ring-indigo-500" value={newStudent.name} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-2">NISN</label>
+                                        <input type="text" placeholder="CONTOH: 0123456789" className="w-full px-5 py-3 rounded-xl bg-slate-100 font-bold text-sm outline-none focus:ring-2 ring-indigo-500" value={newStudent.nisn} onChange={(e) => setNewStudent({...newStudent, nisn: e.target.value})} />
+                                    </div>
+                                    <div className="flex gap-2 pt-4">
+                                        <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 font-bold text-slate-400 bg-slate-100 rounded-xl uppercase text-[10px] hover:bg-slate-200 transition-colors">Batal</button>
+                                        <button type="submit" className="flex-1 py-3 font-bold text-white bg-indigo-600 rounded-xl uppercase text-[10px] hover:bg-indigo-700 transition-colors shadow-lg">Simpan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL KONFIRMASI HAPUS */}
+                    {confirmDeleteId && (
+                        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-overlay no-print">
+                            <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full animate-scale-in shadow-2xl border-t-8 border-rose-500">
+                                <h3 className="text-lg font-black text-slate-800 uppercase text-center mb-2">Hapus Siswa?</h3>
+                                <p className="text-slate-500 text-[10px] text-center font-bold mb-8 uppercase leading-relaxed">
+                                    Hapus <span className="text-rose-600">{students.find(s => s.id === confirmDeleteId)?.name}</span>?
+                                </p>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-3 font-bold text-slate-400 bg-slate-100 rounded-xl uppercase text-[10px] hover:bg-slate-200">Batal</button>
+                                    <button onClick={deleteStudent} className="flex-1 py-3 font-bold text-white bg-rose-500 rounded-xl uppercase text-[10px] hover:bg-rose-600 shadow-lg shadow-rose-200">Hapus</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
